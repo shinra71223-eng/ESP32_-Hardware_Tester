@@ -1,0 +1,6 @@
+esptool
+pyserial
+rich
+click
+flask
+flask-cors

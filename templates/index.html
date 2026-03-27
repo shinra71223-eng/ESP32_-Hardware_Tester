@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Hardware Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background-glow"></div>
+    
+    <div class="container">
+        <header>
+            <h1>ESP32 <span>Hardware Manager</span></h1>
+            <div id="status-badge" class="badge">Disconnected</div>
+        </header>
+
+        <main>
+            <section class="glass-panel" id="connection-panel">
+                <h2>1. Device Connection</h2>
+                <div class="row">
+                    <select id="port-select">
+                        <option value="">Scan for devices...</option>
+                    </select>
+                    <button id="scan-btn" class="secondary-btn">Scan</button>
+                    <button id="info-btn" class="secondary-btn" disabled>Info</button>
+                </div>
+                <div id="chip-info" class="info-box hidden"></div>
+            </section>
+
+            <section class="glass-panel" id="config-panel">
+                <h2>2. LED Configuration</h2>
+                
+                <div class="mode-toggle">
+                    <label>
+                        <input type="checkbox" id="dual-mode-toggle">
+                        <span class="slider"></span>
+                        <span class="label-text">Dual Output Mode</span>
+                    </label>
+                </div>
+
+                <div class="strips-container">
+                    <div class="strip-config" id="strip-a">
+                        <h3>Channel A</h3>
+                        <div class="input-group">
+                            <label>Data Pin</label>
+                            <input type="number" id="pin-a" value="2">
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Width</label>
+                                <input type="number" id="width-a" value="88">
+                            </div>
+                            <div class="input-group">
+                                <label>Height</label>
+                                <input type="number" id="height-a" value="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="strip-config disabled" id="strip-b">
+                        <h3>Channel B</h3>
+                        <div class="input-group">
+                            <label>Data Pin</label>
+                            <input type="number" id="pin-b" value="4">
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Width</label>
+                                <input type="number" id="width-b" value="88">
+                            </div>
+                            <div class="input-group">
+                                <label>Height</label>
+                                <input type="number" id="height-b" value="10">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mapping-options">
+                    <div class="input-group-row">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="zigzag-toggle">
+                            <span class="checkmark"></span>
+                            Zigzag Mapping
+                        </label>
+                        
+                        <div class="input-group inline">
+                            <label>LED No.1 Position</label>
+                            <select id="start-pos">
+                                <option value="0">Top-Left</option>
+                                <option value="1">Top-Right</option>
+                                <option value="2">Bottom-Left</option>
+                                <option value="3">Bottom-Right</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group inline">
+                            <label>Test Mode</label>
+                            <select id="test-mode">
+                                <option value="0">⓪ Connection/Reset Check (Blue)</option>
+                                <option value="1">① Solid White</option>
+                                <option value="2">② Solid Blue</option>
+                                <option value="3">③ Solid Green</option>
+                                <option value="4">④ Solid Red</option>
+                                <option value="5">⑤ Sparkle White</option>
+                                <option value="6">⑥ Sparkle Blue</option>
+                                <option value="7">⑦ Sparkle Green</option>
+                                <option value="8">⑧ Sparkle Red</option>
+                                <option value="9">⑨ Center Rainbow</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group inline">
+                            <label>Board</label>
+                            <select id="board-select">
+                                <option value="esp32">Standard ESP32</option>
+                                <option value="esp32s3">ESP32-S3</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="glass-panel" id="deploy-panel">
+                <div class="row">
+                    <button id="deploy-btn" class="primary-btn">Deploy Firmware</button>
+                    <button id="clean-btn" class="secondary-btn" title="Fix build errors by cleaning">Clean PIO</button>
+                </div>
+                <div class="console-wrapper">
+                    <div id="console" class="console-box">
+                        <span class="line system">Ready to deploy...</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
