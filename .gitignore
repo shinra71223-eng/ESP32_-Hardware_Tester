@@ -3,3 +3,11 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+__pycache__/
+*.pyc
+.venv_build/
+build/
+dist/
+demo/clips.bin
+*.spec
+

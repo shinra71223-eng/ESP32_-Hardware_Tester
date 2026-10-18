@@ -29,6 +29,11 @@
                     <button id="info-btn" class="secondary-btn" disabled>Info</button>
                 </div>
                 <div id="chip-info" class="info-box hidden"></div>
+                <div id="chip-status" class="chip-status hidden">
+                    <span class="status-label">Detected:</span>
+                    <span id="chip-badge" class="badge chip">Unknown</span>
+                    <span id="size-badge" class="badge size">Unknown</span>
+                </div>
             </section>
 
             <section class="glass-panel" id="config-panel">
@@ -52,11 +57,11 @@
                         <div class="input-row">
                             <div class="input-group">
                                 <label>Width</label>
-                                <input type="number" id="width-a" value="88">
+                                <input type="number" id="width-a" value="36">
                             </div>
                             <div class="input-group">
                                 <label>Height</label>
-                                <input type="number" id="height-a" value="10">
+                                <input type="number" id="height-a" value="24">
                             </div>
                         </div>
                     </div>
@@ -110,17 +115,113 @@
                                 <option value="6">⑥ Sparkle Blue</option>
                                 <option value="7">⑦ Sparkle Green</option>
                                 <option value="8">⑧ Sparkle Red</option>
-                                <option value="9">⑨ Center Rainbow</option>
+                                <option value="9" selected>⑨ Center Rainbow</option>
                             </select>
                         </div>
 
                         <div class="input-group inline">
-                            <label>Board</label>
-                            <select id="board-select">
-                                <option value="esp32">Standard ESP32</option>
-                                <option value="esp32s3">ESP32-S3</option>
+                            <label>Project</label>
+                            <select id="project-select">
+                                <option value="tester">Tester (Local Source)</option>
+                                <option value="prod">AudioLink_Draft (Production)</option>
                             </select>
                         </div>
+
+                        <div class="input-group inline">
+                            <label>Environment (Env)</label>
+                            <select id="board-select">
+                                <!-- Options populated by JS -->
+                                <option value="esp32s3">esp32s3 (Default)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Brightness Control -->
+                    <div class="brightness-section">
+                        <div class="brightness-header">
+                            <label for="brightness-slider">LED Brightness</label>
+                            <div class="brightness-display">
+                                <span id="brightness-value">10</span>
+                                <span class="brightness-max">/ 255</span>
+                            </div>
+                        </div>
+                        <input type="range" id="brightness-slider" min="1" max="255" value="10" class="brightness-slider">
+                        <div class="brightness-scale-labels">
+                            <span>1 (Dim)</span>
+                            <span>Safe ≤ 10</span>
+                            <span>255 (Full)</span>
+                        </div>
+
+                        <!-- Warning section (shown only when brightness > 10) -->
+                        <div id="brightness-warning" class="brightness-warning hidden">
+                            <div class="warning-icon">⚠️</div>
+                            <div class="warning-body">
+                                <strong>⚡ 電流量注意 / High Current Warning</strong>
+                                <p>輝度が10を超えると消費電流が大幅に増加します。電源容量・配線が不十分な場合、LEDやESP32が損傷する可能性があります。</p>
+                                <p><em>Brightness above 10 significantly increases current draw. Ensure your power supply and wiring can handle the load.</em></p>
+                                <label class="consent-label">
+                                    <input type="checkbox" id="brightness-consent">
+                                    <span>リスクを理解し、変更に同意します / I understand the risk and consent to this change</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="glass-panel" id="content-panel">
+                <h2>3. Content Playback (動画再生)</h2>
+                <p class="hint">通常はデモ再生。「送信」すると動画を流し、停止して2秒後にデモへ自動復帰します。（先に Deploy Firmware で最新版を書き込んでください）</p>
+                <div class="row">
+                    <input type="file" id="video-file" accept="video/*,.gif">
+                </div>
+                <div id="video-meta" class="hint"></div>
+                <div class="row">
+                    <div class="input-group inline"><label>Width</label><input type="number" id="video-width" value="32" min="1" max="256"></div>
+                    <div class="input-group inline"><label>Height</label><input type="number" id="video-height" value="8" min="1" max="256"></div>
+                    <div class="input-group inline"><label>FPS (0=元動画)</label><input type="number" id="video-fps" value="0" min="0" max="60"></div>
+                    <div class="input-group inline">
+                        <label>縦横比</label>
+                        <select id="video-fit">
+                            <option value="crop">中央トリミング</option>
+                            <option value="stretch">引き伸ばし</option>
+                            <option value="letterbox">黒帯(全体表示)</option>
+                        </select>
+                    </div>
+                    <label class="checkbox-container"><input type="checkbox" id="video-loop" checked><span class="checkmark"></span>ループ</label>
+                </div>
+                <div class="row">
+                    <label>位置</label>
+                    <input type="range" id="video-pos" min="0" max="100" value="0" style="flex:1">
+                    <button id="video-preview-btn" class="secondary-btn" disabled>Preview</button>
+                </div>
+                <div class="preview-wrap"><img id="video-preview" alt="LED preview" class="hidden" style="image-rendering:pixelated;max-width:100%;border:1px solid #444;background:#000"></div>
+                <div class="row">
+                    <label class="checkbox-container"><input type="checkbox" id="video-ok"><span class="checkmark"></span>プレビューを確認しました (OK)</label>
+                    <button id="video-send-btn" class="primary-btn" disabled>送信 (Send)</button>
+                    <button id="video-stop-btn" class="secondary-btn" disabled>停止 (Stop)</button>
+                    <span id="video-status" class="badge">DEMO</span>
+                </div>
+            </section>
+
+            <section class="glass-panel" id="demo-panel">
+                <h2>4. Demo Clips (デモ再生の動画)</h2>
+                <p class="hint">1行に1動画のパス。Deploy時に LED サイズへ変換（30fps）してファームウェアに内蔵し、既存デモの最後に順番に再生します。各動画の前後はフェードイン/アウトします。空欄ならデモ動画なし。</p>
+                <textarea id="demo-clips" rows="4" style="width:100%;box-sizing:border-box">C:\Users\0008112871\OneDrive - Sony\ドキュメント\AntiGravity\08_TechHandsOn_4th_Demonstration\media\video\キラキラ3.mp4
+C:\Users\0008112871\OneDrive - Sony\ドキュメント\AntiGravity\08_TechHandsOn_4th_Demonstration\media\video\デジタル背景２.mp4
+C:\Users\0008112871\OneDrive - Sony\ドキュメント\AntiGravity\08_TechHandsOn_4th_Demonstration\media\video\ハイパーメディア２.mp4</textarea>
+                <div class="row">
+                    <div class="input-group inline">
+                        <label>縦横比</label>
+                        <select id="demo-fit">
+                            <option value="crop">中央トリミング</option>
+                            <option value="stretch">引き伸ばし</option>
+                            <option value="letterbox">黒帯(全体表示)</option>
+                        </select>
+                    </div>
+                    <div class="input-group inline">
+                        <label>フェード時間 (ms)</label>
+                        <input type="number" id="demo-fade" value="800" min="0" max="3000" step="100">
                     </div>
                 </div>
             </section>

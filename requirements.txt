@@ -4,3 +4,5 @@ rich
 click
 flask
 flask-cors
+opencv-python
+numpy

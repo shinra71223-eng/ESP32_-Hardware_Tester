@@ -3,6 +3,8 @@ import sys
 import subprocess
 import serial.tools.list_ports
 import esptool
+import io
+import contextlib
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -30,17 +32,17 @@ def get_esp32_ports():
     return results
 
 def get_chip_info(port):
+    output = io.StringIO()
     try:
-        # We use esptool's main function via subprocess to get a clean output for now,
-        # or use the internal API if we want to be more integrated.
-        # Let's use the command line for simplicity and robustness.
-        result = subprocess.run(
-            [sys.executable, "-m", "esptool", "--port", port, "flash_id"],
-            capture_output=True, text=True, check=True
-        )
-        return result.stdout
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+            try:
+                esptool.main(['--port', port, 'flash_id'])
+            except SystemExit as e:
+                if e.code != 0:
+                    raise RuntimeError(f"esptool exited with code {e.code}")
+        return output.getvalue()
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Error: {str(e)}\n{output.getvalue()}"
 
 def flash_firmware(port, width, height, pin, color_order, board_env):
     console.print(f"[bold blue]Building and Flashing to {port} (Board: {board_env})...[/bold blue]")
