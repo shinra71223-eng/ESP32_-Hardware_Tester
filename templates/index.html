@@ -1,243 +1,829 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Hardware Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ESP32 Hardware Tester & LED Matrix Studio v2.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="background-glow"></div>
-    
-    <div class="container">
-        <header>
-            <h1>ESP32 <span>Hardware Manager</span></h1>
-            <div id="status-badge" class="badge">Disconnected</div>
-        </header>
 
-        <main>
-            <section class="glass-panel" id="connection-panel">
-                <h2>1. Device Connection</h2>
-                <div class="row">
-                    <select id="port-select">
-                        <option value="">Scan for devices...</option>
-                    </select>
-                    <button id="scan-btn" class="secondary-btn">Scan</button>
-                    <button id="info-btn" class="secondary-btn" disabled>Info</button>
-                </div>
-                <div id="chip-info" class="info-box hidden"></div>
-                <div id="chip-status" class="chip-status hidden">
-                    <span class="status-label">Detected:</span>
-                    <span id="chip-badge" class="badge chip">Unknown</span>
-                    <span id="size-badge" class="badge size">Unknown</span>
-                </div>
-            </section>
+    <!-- ==================== TOP GLOBAL HEADER ==================== -->
+    <header class="top-header">
+        <div class="brand-area">
+            <div class="brand-icon">💠</div>
+            <div>
+                <h1>LED MATRIX <span>STUDIO</span> <small class="ver-tag">Ver 2.0</small></h1>
+                <p class="brand-sub">LEDシート仕様管理・映像作成シミュレータ・実機送信＆FW書込ツール</p>
+            </div>
+        </div>
 
-            <section class="glass-panel" id="config-panel">
-                <h2>2. LED Configuration</h2>
-                
-                <div class="mode-toggle">
-                    <label>
-                        <input type="checkbox" id="dual-mode-toggle">
-                        <span class="slider"></span>
-                        <span class="label-text">Dual Output Mode</span>
-                    </label>
-                </div>
+        <!-- Primary Mode Navigation Tabs -->
+        <nav class="main-mode-nav" aria-label="Main Workspace Mode">
+            <button id="view-studio-btn" class="mode-nav-btn active" data-view="studio">
+                <span class="mode-step">MAIN STUDIO</span>
+                <span class="mode-title">🎬 1. 映像作成・確認・ライブ送信</span>
+            </button>
+            <button id="view-hw-btn" class="mode-nav-btn" data-view="hardware">
+                <span class="mode-step">HARDWARE &amp; SPEC</span>
+                <span class="mode-title">🛠️ 2. LEDシート仕様管理 &amp; FW書込</span>
+            </button>
+            <button id="view-mobile-btn" class="mode-nav-btn" data-view="mobile">
+                <span class="mode-step">SMARTPHONE</span>
+                <span class="mode-title">📱 3. スマホリモコンUI</span>
+            </button>
+        </nav>
 
-                <div class="strips-container">
-                    <div class="strip-config" id="strip-a">
-                        <h3>Channel A</h3>
-                        <div class="input-group">
-                            <label>Data Pin</label>
-                            <input type="number" id="pin-a" value="2">
-                        </div>
-                        <div class="input-row">
-                            <div class="input-group">
-                                <label>Width</label>
-                                <input type="number" id="width-a" value="36">
-                            </div>
-                            <div class="input-group">
-                                <label>Height</label>
-                                <input type="number" id="height-a" value="24">
-                            </div>
-                        </div>
+        <!-- Live Telemetry & Power Meter + QR Connect -->
+        <div class="header-right">
+            <div class="telemetry-bar">
+                <div class="telemetry-item">
+                    <span class="tel-label">選択中 LEDシート仕様</span>
+                    <span id="hdr-matrix-badge" class="tel-value cyan">36×24 (864灯) · 1 Pin</span>
+                </div>
+                <div class="telemetry-item power-meter-item">
+                    <div class="tel-row">
+                        <span class="tel-label">推定消費電流</span>
+                        <span id="hdr-power-value" class="tel-value green">0.18 A / 0.9 W</span>
                     </div>
-
-                    <div class="strip-config disabled" id="strip-b">
-                        <h3>Channel B</h3>
-                        <div class="input-group">
-                            <label>Data Pin</label>
-                            <input type="number" id="pin-b" value="4">
-                        </div>
-                        <div class="input-row">
-                            <div class="input-group">
-                                <label>Width</label>
-                                <input type="number" id="width-b" value="88">
-                            </div>
-                            <div class="input-group">
-                                <label>Height</label>
-                                <input type="number" id="height-b" value="10">
-                            </div>
-                        </div>
+                    <div class="power-bar-bg">
+                        <div id="hdr-power-bar" class="power-bar-fill" style="width: 8%;"></div>
                     </div>
                 </div>
+                <div class="telemetry-item">
+                    <span class="tel-label">実機接続ポート</span>
+                    <span id="status-badge" class="badge">未接続 (Simのみ)</span>
+                </div>
+            </div>
+            <button id="qr-connect-btn" class="secondary-btn compact-btn" title="スマホ接続URL・QRコード">📲 スマホ接続</button>
+        </div>
+    </header>
 
-                <div class="mapping-options">
-                    <div class="input-group-row">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="zigzag-toggle">
-                            <span class="checkmark"></span>
-                            Zigzag Mapping
+    <!-- =========================================================================
+         MODE 1 (DEFAULT): 🎬 MAIN STUDIO VIEW (分かりやすい2ステップ構成)
+         ========================================================================= -->
+    <main id="pc-studio-view" class="studio-two-col">
+
+        <!-- ========== LEFT/MAIN COLUMN: SIMULATOR + STEP A (作成) + STEP B (保存データ送信) ========== -->
+        <section class="studio-col col-center">
+
+            <!-- 📺 TOP: VIRTUAL LED MATRIX SIMULATOR (何が流れているか・切替が一目でわかる設計) -->
+            <div class="glass-panel simulator-panel">
+                <div class="sim-header">
+                    <div class="sim-title-group">
+                        <h2>📺 LED シミュレータ (実機イメージ確認モニター)</h2>
+                    </div>
+                    <div class="sim-controls">
+                        <label class="sim-toggle" title="開発中のLEDシート仕様をプリセットから即座に切り替え">
+                            <span>📋 シート仕様:</span>
+                            <select id="studio-sheet-preset-select" class="compact-select"></select>
                         </label>
-                        
-                        <div class="input-group inline">
-                            <label>LED No.1 Position</label>
-                            <select id="start-pos">
-                                <option value="0">Top-Left</option>
-                                <option value="1">Top-Right</option>
-                                <option value="2">Bottom-Left</option>
-                                <option value="3">Bottom-Right</option>
-                            </select>
-                        </div>
+                        <label class="sim-toggle"><input type="checkbox" id="sim-round-leds" checked><span>🟢 丸型LED</span></label>
+                        <label class="sim-toggle"><input type="checkbox" id="sim-show-pins" checked><span>📐 ピン境界</span></label>
+                        <label class="sim-toggle"><input type="checkbox" id="sim-glow" checked><span>✨ グロー</span></label>
+                    </div>
+                </div>
 
-                        <div class="input-group inline">
-                            <label>Test Mode</label>
-                            <select id="test-mode">
-                                <option value="0">⓪ Connection/Reset Check (Blue)</option>
-                                <option value="1">① Solid White</option>
-                                <option value="2">② Solid Blue</option>
-                                <option value="3">③ Solid Green</option>
-                                <option value="4">④ Solid Red</option>
-                                <option value="5">⑤ Sparkle White</option>
-                                <option value="6">⑥ Sparkle Blue</option>
-                                <option value="7">⑦ Sparkle Green</option>
-                                <option value="8">⑧ Sparkle Red</option>
-                                <option value="9" selected>⑨ Center Rainbow</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group inline">
-                            <label>Project</label>
-                            <select id="project-select">
-                                <option value="tester">Tester (Local Source)</option>
-                                <option value="prod">AudioLink_Draft (Production)</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group inline">
-                            <label>Environment (Env)</label>
-                            <select id="board-select">
-                                <!-- Options populated by JS -->
-                                <option value="esp32s3">esp32s3 (Default)</option>
-                            </select>
+                <!-- 🟢 NOW PLAYING BANNER (現在シミュレータに流れている映像を明示) -->
+                <div class="now-playing-banner">
+                    <div class="np-left">
+                        <span id="np-source-badge" class="np-badge">📂 保存済みデータ再生中</span>
+                        <div class="np-title-wrap">
+                            <span class="np-label">現在シミュレータに表示中：</span>
+                            <strong id="np-current-title" class="np-title">キラキラ3 (LED最適変換)</strong>
                         </div>
                     </div>
+                    <div class="np-right">
+                        <span id="video-status" class="badge active">SIMULATOR PLAYING</span>
+                        <button type="button" id="sim-pause-btn" class="secondary-btn xs-btn">⏸️ 一時停止/再開</button>
+                        <button type="button" id="sim-blackout-btn" class="secondary-btn xs-btn">🌑 画面クリア</button>
+                    </div>
+                </div>
 
-                    <!-- Brightness Control -->
-                    <div class="brightness-section">
-                        <div class="brightness-header">
-                            <label for="brightness-slider">LED Brightness</label>
-                            <div class="brightness-display">
-                                <span id="brightness-value">10</span>
-                                <span class="brightness-max">/ 255</span>
+                <!-- LED Canvas Stage -->
+                <div class="simulator-stage">
+                    <canvas id="led-sim-canvas" width="760" height="440"></canvas>
+                </div>
+
+                <!-- 🎞️ QUICK SOURCE SWITCHER BAR (どこを押せば映像が切り替わるか一目でわかるバー) -->
+                <div class="quick-switcher-bar">
+                    <div class="qs-header">
+                        <span class="qs-title">👆 クリックでシミュレータの映像を即切り替え：</span>
+                        <span id="sim-info-text" class="hint-xs">36×24 (864 LEDs) | Ch.1: GPIO2</span>
+                    </div>
+                    <div id="sim-quick-clips-bar" class="qs-pills">
+                        <!-- Populated dynamically with saved Library clips + preset effects -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🛠️ WORKFLOW GUIDE BAR (2つの流れを明快にナビゲート) -->
+            <div class="workflow-switcher-cards">
+                <button type="button" id="wf-btn-create" class="wf-card active">
+                    <div class="wf-step-num">FLOW 1：新しく作る・変換する</div>
+                    <div class="wf-step-main">🎨 データ作成 ⇒ シミュレータで確認 ⇒ 保存</div>
+                    <div class="wf-step-sub">動画・文字・ドット絵・エフェクトからLED用データを作って保存します</div>
+                </button>
+                <div class="wf-arrow">➡</div>
+                <button type="button" id="wf-btn-send" class="wf-card">
+                    <div class="wf-step-num">FLOW 2：保存データを選んで使う</div>
+                    <div class="wf-step-main">📡 保存済みデータ ⇒ 実機へライブ送信 / FW登録</div>
+                    <div class="wf-step-sub">保存された一覧（<span id="wf-lib-count">3</span>件）から選んで実機のLEDシートに送ります</div>
+                </button>
+            </div>
+
+            <!-- =================================================================
+                 FLOW 1 PANEL: データ作成 ⇒ シミュレータで確認 ⇒ 保存
+                 ================================================================= -->
+            <div id="flow-create-panel" class="glass-panel workspace-panel">
+                <div class="flow-panel-header">
+                    <div>
+                        <span class="flow-badge">FLOW 1</span>
+                        <h3>新しいLEDデータを作成 ➡ 上のシミュレータで確認 ➡ 保存リストへ登録</h3>
+                    </div>
+                    <span class="hint-xs">以下の4種類の作り方から選べます</span>
+                </div>
+
+                <div class="studio-tabs">
+                    <button class="studio-tab active" data-tab="tab-converter">🎬 ① 動画・GIFから変換して作る</button>
+                    <button class="studio-tab" data-tab="tab-marquee">🔤 ② 電光掲示板（流れる文字）を作る</button>
+                    <button class="studio-tab" data-tab="tab-pixel">🎨 ③ 手描きドット絵を作る</button>
+                    <button class="studio-tab" data-tab="tab-fx">✨ ④ 内蔵エフェクトから作る</button>
+                </div>
+
+                <!-- TAB 1: VIDEO / GIF CONVERTER -->
+                <div id="tab-converter" class="tab-pane active">
+                    <div class="create-step-grid">
+                        <div class="create-step-box">
+                            <div class="step-chip">手順 1：元になる動画・GIFファイルを選ぶ</div>
+                            <div class="file-upload-box">
+                                <input type="file" id="video-file" accept="video/*,.gif">
+                                <div id="video-meta" class="hint-xs" style="margin-top:6px;">MP4 / MOV / GIF / WebM を選択すると、すぐ上のシミュレータにプレビュー表示されます</div>
+                            </div>
+
+                            <div class="input-row three-col" style="margin-top:12px;">
+                                <div class="input-group">
+                                    <label>LED幅 (W)</label>
+                                    <input type="number" id="video-width" value="36" min="1" max="256">
+                                </div>
+                                <div class="input-group">
+                                    <label>LED高さ (H)</label>
+                                    <input type="number" id="video-height" value="24" min="1" max="256">
+                                </div>
+                                <div class="input-group">
+                                    <label>フレームレート (FPS)</label>
+                                    <input type="number" id="video-fps" value="30" min="1" max="60">
+                                </div>
+                            </div>
+
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label>画面の収め方 (縦横比)</label>
+                                    <select id="video-fit">
+                                        <option value="crop">中央トリミング (画面いっぱいに拡大)</option>
+                                        <option value="stretch">引き伸ばし (縦横比をLEDに合わせる)</option>
+                                        <option value="letterbox">全体表示 (上下左右に黒帯を入れる)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>保存するデータ名 (分かりやすい名前)</label>
+                                    <input type="text" id="conv-title" placeholder="例: キラキラ背景_36x24">
+                                </div>
                             </div>
                         </div>
-                        <input type="range" id="brightness-slider" min="1" max="255" value="10" class="brightness-slider">
-                        <div class="brightness-scale-labels">
-                            <span>1 (Dim)</span>
-                            <span>Safe ≤ 10</span>
-                            <span>255 (Full)</span>
-                        </div>
 
-                        <!-- Warning section (shown only when brightness > 10) -->
-                        <div id="brightness-warning" class="brightness-warning hidden">
-                            <div class="warning-icon">⚠️</div>
-                            <div class="warning-body">
-                                <strong>⚡ 電流量注意 / High Current Warning</strong>
-                                <p>輝度が10を超えると消費電流が大幅に増加します。電源容量・配線が不十分な場合、LEDやESP32が損傷する可能性があります。</p>
-                                <p><em>Brightness above 10 significantly increases current draw. Ensure your power supply and wiring can handle the load.</em></p>
-                                <label class="consent-label">
-                                    <input type="checkbox" id="brightness-consent">
-                                    <span>リスクを理解し、変更に同意します / I understand the risk and consent to this change</span>
-                                </label>
+                        <div class="create-step-box">
+                            <div class="step-chip">手順 2：シミュレータを見ながら色味を調整 ➡ 保存！</div>
+                            <div class="grading-box">
+                                <div class="slider-item">
+                                    <div class="slider-lbl"><span>LEDガンマ補正 (白飛び防止)</span><strong id="lbl-gamma">2.2</strong></div>
+                                    <input type="range" id="conv-gamma" min="1.0" max="2.8" step="0.1" value="2.2">
+                                </div>
+                                <div class="slider-item">
+                                    <div class="slider-lbl"><span>コントラスト (明暗差)</span><strong id="lbl-contrast">1.1</strong></div>
+                                    <input type="range" id="conv-contrast" min="0.5" max="2.0" step="0.05" value="1.1">
+                                </div>
+                                <div class="slider-item">
+                                    <div class="slider-lbl"><span>鮮やかさ (彩度)</span><strong id="lbl-sat">1.2</strong></div>
+                                    <input type="range" id="conv-sat" min="0.0" max="2.5" step="0.1" value="1.2">
+                                </div>
+                                <div class="slider-item">
+                                    <div class="slider-lbl"><span>黒潰し (暗部ノイズ消灯)</span><strong id="lbl-cutoff">5</strong></div>
+                                    <input type="range" id="conv-cutoff" min="0" max="35" step="1" value="5">
+                                </div>
+                                <div class="slider-item">
+                                    <div class="slider-lbl"><span>拡大ズーム</span><strong id="lbl-zoom">1.0x</strong></div>
+                                    <input type="range" id="conv-zoom" min="0.5" max="2.5" step="0.05" value="1.0">
+                                </div>
+                                <div class="slider-item">
+                                    <div class="slider-lbl"><span>確認フレーム位置</span><strong id="lbl-pos">0%</strong></div>
+                                    <input type="range" id="video-pos" min="0" max="100" value="0">
+                                </div>
                             </div>
+
+                            <div class="row compact-row" style="margin-top:12px;">
+                                <button type="button" id="video-preview-btn" class="secondary-btn compact-btn" disabled>🔍 シミュレータに反映</button>
+                                <button type="button" id="conv-save-lib-btn" class="primary-btn" disabled>💾 この設定で変換して「保存済みデータ」に登録する</button>
+                            </div>
+                            <img id="video-preview" alt="LED preview" class="hidden">
+                            <!-- Hidden legacy controls kept for compatibility -->
+                            <input type="checkbox" id="video-ok" checked class="hidden">
+                            <input type="checkbox" id="video-loop" checked class="hidden">
+                            <button type="button" id="video-send-btn" class="hidden"></button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: TEXT MARQUEE STUDIO -->
+                <div id="tab-marquee" class="tab-pane">
+                    <div class="step-chip">文字を入力して「▶️ シミュレータで確認」を押し、良ければ「💾 保存」を押してください</div>
+                    <div class="input-row" style="margin-top:10px;">
+                        <div class="input-group" style="flex:2;">
+                            <label>スクロール表示テキスト (日本語 / 英数字 / 絵文字対応)</label>
+                            <input type="text" id="marquee-text" value="✨ SONY × ESP32 LED MATRIX STUDIO Ver2.0 🚀">
+                        </div>
+                        <div class="input-group">
+                            <label>文字色</label>
+                            <input type="color" id="marquee-fg" value="#00f2ff" style="height:38px;width:100%;">
+                        </div>
+                        <div class="input-group">
+                            <label>背景色</label>
+                            <input type="color" id="marquee-bg" value="#000000" style="height:38px;width:100%;">
+                        </div>
+                        <div class="input-group">
+                            <label>速度 (FPS)</label>
+                            <input type="number" id="marquee-speed" value="30" min="5" max="60">
+                        </div>
+                    </div>
+                    <div class="row compact-row" style="margin-top:8px;">
+                        <button type="button" id="marquee-start-btn" class="secondary-btn compact-btn">▶️ 1. シミュレータで動きを確認</button>
+                        <button type="button" id="marquee-save-lib-btn" class="primary-btn">💾 2. この電光掲示板を「保存済みデータ」に登録する</button>
+                        <button type="button" id="marquee-stop-btn" class="secondary-btn compact-btn">⏹️ 停止</button>
+                    </div>
+                </div>
+
+                <!-- TAB 3: PIXEL ART PAD -->
+                <div id="tab-pixel" class="tab-pane">
+                    <div class="step-chip">上の「📺 LED シミュレータ」画面を直接マウスでなぞって絵を描き、「💾 保存」を押してください</div>
+                    <div class="creative-toolbar" style="margin-top:10px;">
+                        <div class="tool-group">
+                            <label>ペン色:</label>
+                            <input type="color" id="pixel-color" value="#00f2ff" style="width:48px;height:34px;">
+                            <div class="color-swatches">
+                                <button type="button" class="swatch" data-color="#ff0044" style="background:#ff0044"></button>
+                                <button type="button" class="swatch" data-color="#ff9900" style="background:#ff9900"></button>
+                                <button type="button" class="swatch" data-color="#ffee00" style="background:#ffee00"></button>
+                                <button type="button" class="swatch" data-color="#00ff66" style="background:#00ff66"></button>
+                                <button type="button" class="swatch" data-color="#00f2ff" style="background:#00f2ff"></button>
+                                <button type="button" class="swatch" data-color="#7000ff" style="background:#7000ff"></button>
+                                <button type="button" class="swatch" data-color="#ffffff" style="background:#ffffff"></button>
+                                <button type="button" class="swatch" data-color="#000000" style="background:#000000"></button>
+                            </div>
+                            <button type="button" id="pixel-fill-btn" class="secondary-btn compact-btn">🪣 全面塗りつぶし</button>
+                            <button type="button" id="pixel-clear-btn" class="secondary-btn compact-btn">🗑️ 白紙に戻す</button>
+                        </div>
+                        <div class="tool-group">
+                            <button type="button" id="pixel-save-lib-btn" class="primary-btn compact-btn">💾 描いた絵を「保存済みデータ」に登録する</button>
+                            <button type="button" id="pixel-send-btn" class="secondary-btn compact-btn">📡 今すぐ1枚実機へ投影</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: LIVE PROCEDURAL FX -->
+                <div id="tab-fx" class="tab-pane">
+                    <div class="step-chip">エフェクトをクリックすると上のシミュレータで再生されます。気に入ったら「💾 保存」でライブラリ化できます</div>
+                    <div class="fx-grid" style="margin-top:10px;">
+                        <button type="button" class="fx-card active" data-fx="rainbow">🌈 Center Rainbow (虹)</button>
+                        <button type="button" class="fx-card" data-fx="plasma">🔮 Cyber Plasma (プラズマ)</button>
+                        <button type="button" class="fx-card" data-fx="fire">🔥 Fire Matrix (炎)</button>
+                        <button type="button" class="fx-card" data-fx="matrix">💻 Digital Matrix Rain</button>
+                        <button type="button" class="fx-card" data-fx="sparkle">✨ Starlight Sparkle</button>
+                    </div>
+                    <div class="row compact-row" style="margin-top:12px;">
+                        <button type="button" id="fx-stream-btn" class="secondary-btn compact-btn">▶️ シミュレータで再生</button>
+                        <button type="button" id="fx-save-lib-btn" class="primary-btn">💾 このエフェクト(3秒ループ)を「保存済みデータ」に登録する</button>
+                        <button type="button" id="fx-stop-btn" class="secondary-btn compact-btn">⏹️ 停止</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 FLOW 2 PANEL: 保存されたデータ一覧 ⇒ シミュレータ確認 / 実機送信 / FW登録
+                 ================================================================= -->
+            <div id="flow-send-panel" class="glass-panel workspace-panel">
+                <div class="flow-panel-header">
+                    <div>
+                        <span class="flow-badge green-badge">FLOW 2</span>
+                        <h3>📂 保存済み LED データ一覧 （選んでシミュレータ確認 ＆ 実機へ送信）</h3>
+                    </div>
+                    <div class="row compact-row">
+                        <button type="button" id="video-stop-btn" class="secondary-btn xs-btn" disabled>⏹️ 実機へのライブ送信を停止</button>
+                        <button type="button" id="refresh-lib-btn" class="secondary-btn xs-btn">🔄 一覧更新</button>
+                    </div>
+                </div>
+
+                <!-- 初心者向けの2つの送信方法ガイド -->
+                <div class="send-explainer-grid">
+                    <div class="explainer-box live-exp">
+                        <strong>📡 方法A：「実機へライブ送信」ボタン</strong>
+                        <span>USBケーブル（またはWi-Fi）で繋がっているLEDシートに、<b>待ち時間ゼロで今すぐ映像を流します</b>。（書き込み不要・テストやライブ演出向け）</span>
+                    </div>
+                    <div class="explainer-box flash-exp">
+                        <strong>⚡ 方法B：「本体メモリ(FW)に登録」ボタン</strong>
+                        <span>PCを外しても<b>マイコンの電源を入れるだけで自動ループ再生</b>されるよう、マイコン内部メモリへの書き込みリストに登録します。</span>
+                    </div>
+                </div>
+
+                <div id="library-grid" class="library-grid">
+                    <!-- Populated dynamically with crystal-clear action buttons -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== RIGHT COLUMN: LIVE REMOTE CONTROL DECK ========== -->
+        <aside class="studio-col col-right">
+
+            <!-- 1. Connection & Port Status -->
+            <section class="glass-panel">
+                <div class="panel-header">
+                    <h2>🔌 実機接続ポート (USB)</h2>
+                    <button type="button" id="studio-scan-btn" class="secondary-btn xs-btn">🔍 再検索</button>
+                </div>
+                <select id="studio-port-select">
+                    <option value="">ポートを検索中...</option>
+                </select>
+                <p class="hint-xs" style="margin-top:6px;">※実機を繋がなくても、左のシミュレータで全機能の作成・確認が可能です。</p>
+            </section>
+
+            <!-- 2. Brightness & High Current Safety Lock -->
+            <section class="glass-panel">
+                <div class="panel-header">
+                    <h2>🔆 LEDの明るさ (輝度)</h2>
+                    <div class="brightness-display">
+                        <span id="brightness-value">10</span>
+                        <span class="brightness-max">/ 255</span>
+                    </div>
+                </div>
+
+                <input type="range" id="brightness-slider" min="1" max="255" value="10" class="brightness-slider">
+                <div class="brightness-scale-labels">
+                    <span>1 (暗い)</span>
+                    <span>安全目安 ≤ 10</span>
+                    <span>255 (最大)</span>
+                </div>
+
+                <div id="brightness-warning" class="brightness-warning hidden">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-body">
+                        <strong>⚡ 電流量注意 (High Current)</strong>
+                        <p>輝度が10を超えると消費電流が急増します。電源容量を確認してください。</p>
+                        <label class="consent-label">
+                            <input type="checkbox" id="brightness-consent">
+                            <span>リスクを理解し同意します</span>
+                        </label>
                     </div>
                 </div>
             </section>
 
-            <section class="glass-panel" id="content-panel">
-                <h2>3. Content Playback (動画再生)</h2>
-                <p class="hint">通常はデモ再生。「送信」すると動画を流し、停止して2秒後にデモへ自動復帰します。（先に Deploy Firmware で最新版を書き込んでください）</p>
-                <div class="row">
-                    <input type="file" id="video-file" accept="video/*,.gif">
+            <!-- 3. Quick Diagnostic Test Patterns -->
+            <section class="glass-panel">
+                <h2>🧪 点灯テスト (単色チェック)</h2>
+                <p class="hint-xs" style="margin-bottom:8px;">LEDのドット欠けやRGB色順の確認用テストパターン</p>
+                <div class="quick-mode-grid">
+                    <button type="button" class="qmode-btn" data-tmode="0">⓪ 青チェック</button>
+                    <button type="button" class="qmode-btn" data-tmode="1">① 全白点灯</button>
+                    <button type="button" class="qmode-btn" data-tmode="4">④ 全赤点灯</button>
+                    <button type="button" class="qmode-btn" data-tmode="3">③ 全緑点灯</button>
+                    <button type="button" class="qmode-btn" data-tmode="2">② 全青点灯</button>
+                    <button type="button" class="qmode-btn active" data-tmode="9">⑨ レインボー</button>
                 </div>
-                <div id="video-meta" class="hint"></div>
-                <div class="row">
-                    <div class="input-group inline"><label>Width</label><input type="number" id="video-width" value="32" min="1" max="256"></div>
-                    <div class="input-group inline"><label>Height</label><input type="number" id="video-height" value="8" min="1" max="256"></div>
-                    <div class="input-group inline"><label>FPS (0=元動画)</label><input type="number" id="video-fps" value="0" min="0" max="60"></div>
-                    <div class="input-group inline">
-                        <label>縦横比</label>
-                        <select id="video-fit">
-                            <option value="crop">中央トリミング</option>
-                            <option value="stretch">引き伸ばし</option>
-                            <option value="letterbox">黒帯(全体表示)</option>
+                <select id="test-mode" class="hidden">
+                    <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+                    <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                    <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                    <option value="9" selected>9</option>
+                </select>
+            </section>
+
+            <!-- 4. Channel Output Mask -->
+            <section class="glass-panel">
+                <div class="panel-header">
+                    <h2>📐 データピン別 ON/OFF</h2>
+                    <span class="hint-xs">ピン別点灯確認</span>
+                </div>
+                <div id="ch-mask-grid" class="ch-mask-grid"></div>
+            </section>
+        </aside>
+    </main>
+
+    <!-- =========================================================================
+         MODE 2: 🛠️ LED SHEET SPEC MANAGER & FIRMWARE DEPLOY VIEW
+         ========================================================================= -->
+    <main id="hw-setup-view" class="hw-container hidden">
+
+        <!-- TOP FULL-WIDTH PANEL: 📋 各種 LEDシート 仕様管理表 (Preset & Spec Table) -->
+        <section class="glass-panel spec-table-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>📋 1. 開発中 LEDシート 仕様管理表 &amp; プリセット選択</h2>
+                    <p class="hint-xs">登録済みのLEDシート仕様から選ぶだけで、解像度・ピン数・電圧・配線向きが一括設定されます（<code>LED_SHEETS_SPEC.md</code> にも自動保存されます）。</p>
+                </div>
+                <button type="button" id="open-save-sheet-modal-btn" class="primary-btn compact-btn" style="flex:0;">➕ 現在のマニュアル設定を仕様表に新規登録</button>
+            </div>
+
+            <div class="spec-table-wrap">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>状態 / 操作</th>
+                            <th>型番・コード</th>
+                            <th>LEDシート名称</th>
+                            <th>解像度 (W×H)</th>
+                            <th>総LED数</th>
+                            <th>物理寸法 / ピッチ</th>
+                            <th>LEDチップ (電圧/色順)</th>
+                            <th>ピン構成・トポロジー</th>
+                            <th>起点 / 配線</th>
+                            <th>推奨輝度</th>
+                            <th>用途・備考</th>
+                            <th>削除</th>
+                        </tr>
+                    </thead>
+                    <tbody id="led-sheets-tbody">
+                        <!-- Populated dynamically from /api/led_sheets -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- BOTTOM 2-COLUMN GRID: Left = Manual Override & MCU | Right = Wiring Map & FW Deploy -->
+        <div class="hw-grid">
+            <!-- Left Column: MCU & Manual LED Sheet Configuration -->
+            <div class="studio-col">
+                <section class="glass-panel">
+                    <div class="panel-header">
+                        <h2>🔌 2. マイコン (MCU) &amp; シリアルポート設定</h2>
+                        <span id="chip-badge" class="badge chip">Auto-Detect</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Serial Port (USB CDC / UART)</label>
+                        <div class="row compact-row">
+                            <select id="port-select">
+                                <option value="">Scanning ports...</option>
+                            </select>
+                            <button id="scan-btn" class="secondary-btn compact-btn">🔍 Scan</button>
+                            <button id="info-btn" class="secondary-btn compact-btn" disabled>ℹ️ Chip自動判別</button>
+                        </div>
+                    </div>
+
+                    <div id="chip-status" class="chip-status hidden">
+                        <span class="status-label">Detected:</span>
+                        <span id="detected-chip-name" class="badge chip">Unknown</span>
+                        <span id="size-badge" class="badge size">4MB</span>
+                    </div>
+                    <div id="chip-info" class="info-box hidden"></div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>MCU Family (マイコンシリーズ)</label>
+                            <select id="mcu-family-select">
+                                <option value="esp32">Espressif ESP32 Series</option>
+                                <option value="teensy">PJRC Teensy Series</option>
+                                <option value="spresense">SONY SPRESENSE Series</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Board / Target Model</label>
+                            <select id="board-select">
+                                <option value="esp32s3">ESP32-S3 (DevKitC-1)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Flash Size</label>
+                            <select id="flash-size-select">
+                                <option value="4MB">4MB Flash</option>
+                                <option value="8MB">8MB Flash</option>
+                                <option value="16MB">16MB Flash</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Firmware Project</label>
+                            <select id="project-select">
+                                <option value="tester">Studio / Tester (v2.0)</option>
+                                <option value="prod">AudioLink (Production)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p id="mcu-desc-hint" class="hint-xs">Wi-Fi/BLE内蔵・RMT/DMAによる高速WS2812B駆動に対応</p>
+                </section>
+
+                <!-- Manual LED Node & Max 8-Pin Matrix Topology -->
+                <section class="glass-panel">
+                    <div class="panel-header">
+                        <h2>🔧 3. LEDシート詳細マニュアル設定 (最大8ピン対応)</h2>
+                        <span id="active-pins-badge" class="badge active">1 / 8 Pins</span>
+                    </div>
+                    <p class="hint-xs" style="margin-bottom:10px;">上の仕様管理表で選んだプリセットをベースに、ピン番号やサイズを自由に変更できます。</p>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>LED Chip &amp; Power Voltage</label>
+                            <select id="led-chip-select">
+                                <option value="WS2812B" data-volt="5" data-ma="45">WS2812B (Standard 5V)</option>
+                                <option value="WS2812E" data-volt="5" data-ma="36">WS2812E / ECO (5V)</option>
+                                <option value="WS2813" data-volt="5" data-ma="45">WS2813 (Dual-Line 5V)</option>
+                                <option value="WS2815" data-volt="12" data-ma="15">WS2815 (12V High-Tol)</option>
+                                <option value="SK6812" data-volt="5" data-ma="42">SK6812 RGB (5V)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Color Order (色順序)</label>
+                            <select id="color-order-select">
+                                <option value="GRB" selected>GRB (WS2812標準)</option>
+                                <option value="RGB">RGB</option>
+                                <option value="BGR">BGR</option>
+                                <option value="BRG">BRG</option>
+                                <option value="RBG">RBG</option>
+                                <option value="GBR">GBR</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Multi-Pin Topology Mode (複数ピンの役割モード)</label>
+                        <select id="topology-select">
+                            <option value="unified">① 統合キャンバス分割 (Unified Tiled: 複数ピンで1つの大画面を分割駆動)</option>
+                            <option value="independent">② 独立マルチゾーン (Independent Zones: ピン毎に別サイズのパネルを制御)</option>
+                            <option value="mirror">③ マルチミラーリング (Multi-Mirror: 全ピンに同一映像を同期出力)</option>
                         </select>
                     </div>
-                    <label class="checkbox-container"><input type="checkbox" id="video-loop" checked><span class="checkmark"></span>ループ</label>
-                </div>
-                <div class="row">
-                    <label>位置</label>
-                    <input type="range" id="video-pos" min="0" max="100" value="0" style="flex:1">
-                    <button id="video-preview-btn" class="secondary-btn" disabled>Preview</button>
-                </div>
-                <div class="preview-wrap"><img id="video-preview" alt="LED preview" class="hidden" style="image-rendering:pixelated;max-width:100%;border:1px solid #444;background:#000"></div>
-                <div class="row">
-                    <label class="checkbox-container"><input type="checkbox" id="video-ok"><span class="checkmark"></span>プレビューを確認しました (OK)</label>
-                    <button id="video-send-btn" class="primary-btn" disabled>送信 (Send)</button>
-                    <button id="video-stop-btn" class="secondary-btn" disabled>停止 (Stop)</button>
-                    <span id="video-status" class="badge">DEMO</span>
-                </div>
-            </section>
 
-            <section class="glass-panel" id="demo-panel">
-                <h2>4. Demo Clips (デモ再生の動画)</h2>
-                <p class="hint">1行に1動画のパス。Deploy時に LED サイズへ変換（30fps）してファームウェアに内蔵し、既存デモの最後に順番に再生します。各動画の前後はフェードイン/アウトします。空欄ならデモ動画なし。</p>
-                <textarea id="demo-clips" rows="4" style="width:100%;box-sizing:border-box">C:\Users\0008112871\OneDrive - Sony\ドキュメント\AntiGravity\08_TechHandsOn_4th_Demonstration\media\video\キラキラ3.mp4
+                    <div class="pin-presets-bar">
+                        <span class="preset-label">DATA PINS (最大8系統):</span>
+                        <button type="button" class="pin-preset-btn active" data-pins="1">1 Pin</button>
+                        <button type="button" class="pin-preset-btn" data-pins="2">2 Pins</button>
+                        <button type="button" class="pin-preset-btn" data-pins="4">4 Pins</button>
+                        <button type="button" class="pin-preset-btn" data-pins="8">8 Pins (MAX)</button>
+                        <button type="button" id="add-channel-btn" class="pin-add-btn">+ ピン追加</button>
+                    </div>
+
+                    <div id="channels-container" class="channels-list"></div>
+
+                    <div class="input-row" style="margin-top:12px;">
+                        <div class="input-group">
+                            <label>LED No.1 起点位置 (Start Pos)</label>
+                            <select id="start-pos">
+                                <option value="0">Top-Left (左上起点)</option>
+                                <option value="1">Top-Right (右上起点)</option>
+                                <option value="2">Bottom-Left (左下起点)</option>
+                                <option value="3">Bottom-Right (右下起点)</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="display:flex;align-items:flex-end;padding-bottom:8px;">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="zigzag-toggle" checked>
+                                <span class="checkmark"></span>
+                                Zigzag Mapping (蛇行折り返し配線)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Legacy hidden inputs -->
+                    <input type="checkbox" id="dual-mode-toggle" class="hidden">
+                    <input type="number" id="pin-a" value="2" class="hidden">
+                    <input type="number" id="width-a" value="36" class="hidden">
+                    <input type="number" id="height-a" value="24" class="hidden">
+                    <input type="number" id="pin-b" value="4" class="hidden">
+                    <input type="number" id="width-b" value="36" class="hidden">
+                    <input type="number" id="height-b" value="24" class="hidden">
+                </section>
+            </div>
+
+            <!-- Right Column: Visual Wiring Map Preview + Flash Demo Pack & Firmware Deploy -->
+            <div class="studio-col">
+                <section class="glass-panel">
+                    <div class="panel-header">
+                        <h2>📐 4. 配線・チャンネル割り当てプレビュー</h2>
+                        <span id="hw-wiring-summary" class="badge">36×24 · Zigzag ON</span>
+                    </div>
+                    <div class="wiring-preview-stage">
+                        <canvas id="hw-wiring-canvas" width="640" height="220"></canvas>
+                    </div>
+                </section>
+
+                <section class="glass-panel">
+                    <div class="panel-header">
+                        <h2>🚀 5. マイコン本体へのFW・内蔵デモ書き込み (Deploy)</h2>
+                        <span id="flash-usage-label" class="badge size">0.00 / 3.30 MB</span>
+                    </div>
+                    <p class="hint-xs" style="margin-bottom:6px;">ここに登録された動画・<code>.ledbin</code> データはマイコンのFlashメモリに焼き込まれ、<b>PCを外して電源を入れるだけで自動ループ再生</b>されます。</p>
+
+                    <div class="flash-meter-bg">
+                        <div id="flash-meter-fill" class="flash-meter-fill" style="width: 5%;"></div>
+                    </div>
+
+                    <div class="input-group" style="margin-top:10px;">
+                        <label>本体メモリに内蔵するデモ動画リスト (1行1データ)</label>
+                        <textarea id="demo-clips" rows="4">C:\Users\0008112871\OneDrive - Sony\ドキュメント\AntiGravity\08_TechHandsOn_4th_Demonstration\media\video\キラキラ3.mp4
 C:\Users\0008112871\OneDrive - Sony\ドキュメント\AntiGravity\08_TechHandsOn_4th_Demonstration\media\video\デジタル背景２.mp4
 C:\Users\0008112871\OneDrive - Sony\ドキュメント\AntiGravity\08_TechHandsOn_4th_Demonstration\media\video\ハイパーメディア２.mp4</textarea>
-                <div class="row">
-                    <div class="input-group inline">
-                        <label>縦横比</label>
-                        <select id="demo-fit">
-                            <option value="crop">中央トリミング</option>
-                            <option value="stretch">引き伸ばし</option>
-                            <option value="letterbox">黒帯(全体表示)</option>
-                        </select>
                     </div>
-                    <div class="input-group inline">
-                        <label>フェード時間 (ms)</label>
-                        <input type="number" id="demo-fade" value="800" min="0" max="3000" step="100">
-                    </div>
-                </div>
-            </section>
 
-            <section class="glass-panel" id="deploy-panel">
-                <div class="row">
-                    <button id="deploy-btn" class="primary-btn">Deploy Firmware</button>
-                    <button id="clean-btn" class="secondary-btn" title="Fix build errors by cleaning">Clean PIO</button>
+                    <div class="input-row three-col">
+                        <div class="input-group">
+                            <label>内蔵変換フィット</label>
+                            <select id="demo-fit">
+                                <option value="crop">中央トリミング</option>
+                                <option value="stretch">引き伸ばし</option>
+                                <option value="letterbox">黒帯(全体)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>前後フェード (ms)</label>
+                            <input type="number" id="demo-fade" value="800" min="0" max="3000" step="100">
+                        </div>
+                        <div class="input-group">
+                            <label>起動時の初期輝度</label>
+                            <input type="number" id="hw-brightness-num" value="10" min="1" max="255">
+                        </div>
+                    </div>
+
+                    <div class="row compact-row" style="margin-top:8px;">
+                        <button id="deploy-btn" class="primary-btn" style="padding:12px 20px;font-size:0.95rem;">🚀 マイコンにファームウェアと内蔵デモを書き込む</button>
+                        <button id="clean-btn" class="secondary-btn compact-btn" title="Clean PIO Build">🧹 Clean</button>
+                    </div>
+
+                    <div class="console-wrapper hw-console">
+                        <div id="console" class="console-box">
+                            <div class="line system">&gt; LED Matrix Studio Ver2.0 Ready.</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== SMARTPHONE REMOTE VIEW (MOBILE APP UI) ==================== -->
+    <section id="mobile-remote-view" class="mobile-view-wrapper hidden">
+        <div class="mobile-phone-frame">
+            <div class="mob-header">
+                <div>
+                    <div class="mob-title">📱 LED REMOTE <span class="ver-tag">v2.0</span></div>
+                    <div id="mob-conn-label" class="mob-sub">🔗 PC Studio 中継モード</div>
                 </div>
-                <div class="console-wrapper">
-                    <div id="console" class="console-box">
-                        <span class="line system">Ready to deploy...</span>
+                <div class="mob-badges">
+                    <span id="mob-power-badge" class="badge size">0.18 A</span>
+                    <button type="button" id="mob-back-pc-btn" class="secondary-btn xs-btn">💻 PC画面へ</button>
+                </div>
+            </div>
+
+            <div class="mob-sim-box">
+                <canvas id="mob-sim-canvas" width="360" height="240"></canvas>
+                <div class="mob-now-playing">
+                    <span id="mob-playing-title">再生中: キラキラ3</span>
+                    <button type="button" id="mob-stop-btn" class="secondary-btn xs-btn">⏹️ 停止</button>
+                </div>
+            </div>
+
+            <div class="mob-body">
+                <div id="mob-tab-library" class="mob-pane active">
+                    <div class="mob-section-title">
+                        <span>📂 PCで作成・保存されたデータ一覧</span>
+                        <label class="mob-file-btn">
+                            📁 .ledbin読込
+                            <input type="file" id="mob-local-ledbin" accept=".ledbin" class="hidden">
+                        </label>
+                    </div>
+                    <p class="hint-xs">タップするとLEDシートへ送信します。</p>
+                    <div id="mob-library-list" class="mob-library-list"></div>
+                </div>
+
+                <div id="mob-tab-remote" class="mob-pane">
+                    <div class="mob-card">
+                        <div class="slider-lbl"><span>🔆 LED 輝度 (Brightness)</span><strong id="mob-bright-val">10 / 255</strong></div>
+                        <input type="range" id="mob-bright-slider" min="1" max="255" value="10" class="brightness-slider">
+                    </div>
+
+                    <div class="mob-card">
+                        <label class="sub-label">⚡ クイックカラー &amp; エフェクト</label>
+                        <div class="mob-fx-grid">
+                            <button type="button" class="mob-fx-btn" data-fx="rainbow">🌈 虹</button>
+                            <button type="button" class="mob-fx-btn" data-fx="plasma">🔮 プラズマ</button>
+                            <button type="button" class="mob-fx-btn" data-fx="fire">🔥 炎</button>
+                            <button type="button" class="mob-fx-btn" data-fx="sparkle">✨ キラキラ</button>
+                            <button type="button" class="mob-fx-btn" data-fx="matrix">💻 マトリックス</button>
+                            <button type="button" class="mob-fx-btn" data-fx="blackout">🌑 消灯</button>
+                        </div>
+                        <div class="row compact-row" style="margin-top:10px;align-items:center;">
+                            <span>単色カラー:</span>
+                            <input type="color" id="mob-solid-color" value="#00f2ff" style="height:38px;flex:1;">
+                        </div>
                     </div>
                 </div>
-            </section>
-        </main>
+
+                <div id="mob-tab-creative" class="mob-pane">
+                    <div class="mob-card">
+                        <label class="sub-label">🔤 スマホ電光掲示板 (テキスト送信)</label>
+                        <input type="text" id="mob-marquee-text" value="📱 スマホから送信中！ ✨" style="margin-bottom:8px;">
+                        <div class="row compact-row">
+                            <input type="color" id="mob-marquee-color" value="#00ff88" style="width:60px;height:38px;">
+                            <button type="button" id="mob-marquee-send-btn" class="primary-btn compact-btn">▶️ スクロール送信</button>
+                        </div>
+                    </div>
+                    <div class="mob-card">
+                        <label class="sub-label">🎨 指でお絵かき投影</label>
+                        <p class="hint-xs">上部のLEDプレビュー画面を指でなぞると、そのままLEDマトリックスに描けます。</p>
+                    </div>
+                </div>
+
+                <div id="mob-tab-conn" class="mob-pane">
+                    <div class="mob-card">
+                        <label class="sub-label">📡 通信経路の選択 (ハイブリッド接続)</label>
+                        <select id="mob-conn-mode" style="margin-bottom:10px;">
+                            <option value="pc">① PC Studio サーバー経由 (同一Wi-Fi LAN)</option>
+                            <option value="esp32">② ESP32 Wi-Fi 直結モード (WebSocket)</option>
+                        </select>
+                        <div class="input-group">
+                            <label>ESP32 直結時の IP / WebSocket 先</label>
+                            <input type="text" id="mob-esp-ip" value="ws://192.168.4.1:81">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="mob-bottom-nav">
+                <button type="button" class="mob-nav-btn active" data-mobtab="mob-tab-library">
+                    <span class="mob-icon">📂</span><span>保存データ</span>
+                </button>
+                <button type="button" class="mob-nav-btn" data-mobtab="mob-tab-remote">
+                    <span class="mob-icon">🎛️</span><span>リモコン</span>
+                </button>
+                <button type="button" class="mob-nav-btn" data-mobtab="mob-tab-creative">
+                    <span class="mob-icon">🎨</span><span>文字・描く</span>
+                </button>
+                <button type="button" class="mob-nav-btn" data-mobtab="mob-tab-conn">
+                    <span class="mob-icon">📡</span><span>接続設定</span>
+                </button>
+            </nav>
+        </div>
+    </section>
+
+    <!-- ==================== MODAL 1: REGISTER NEW LED SHEET SPEC ==================== -->
+    <div id="save-sheet-modal" class="modal-backdrop hidden">
+        <div class="glass-panel modal-card" style="max-width:540px;">
+            <div class="panel-header">
+                <h2>➕ 現在の設定を「LEDシート仕様管理表」に登録</h2>
+                <button type="button" id="close-sheet-modal-btn" class="secondary-btn xs-btn">✕ 閉じる</button>
+            </div>
+            <p class="hint-xs" style="margin-bottom:12px;">現在設定されている解像度・データピン構成・LEDチップ・配線設定をプリセットとして保存します。</p>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>型番・管理コード</label>
+                    <input type="text" id="new-sheet-code" placeholder="例: SONY-LED-4824-B">
+                </div>
+                <div class="input-group">
+                    <label>物理寸法・ピッチ</label>
+                    <input type="text" id="new-sheet-phys" placeholder="例: 480mm × 240mm (10mmピッチ)">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>LEDシート名称 (プリセット選択に表示される名前)</label>
+                <input type="text" id="new-sheet-name" placeholder="例: 48×24 イベント用曲面LEDシート">
+            </div>
+            <div class="input-group">
+                <label>用途・プロジェクト備考</label>
+                <input type="text" id="new-sheet-usage" placeholder="例: 展示会メインパネル・2ピン分割駆動">
+            </div>
+            <div class="row compact-row" style="margin-top:14px;">
+                <button type="button" id="confirm-save-sheet-btn" class="primary-btn">💾 仕様管理表に登録する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: SMARTPHONE QR / CONNECTION ==================== -->
+    <div id="qr-modal" class="modal-backdrop hidden">
+        <div class="glass-panel modal-card">
+            <div class="panel-header">
+                <h2>📲 スマートフォン連携 (Mobile Remote)</h2>
+                <button type="button" id="qr-close-btn" class="secondary-btn xs-btn">✕ 閉じる</button>
+            </div>
+            <p class="hint-xs">スマートフォンを同じ Wi-Fi に接続し、以下の URL にアクセスするとスマホ専用リモコン画面が開きます。</p>
+            <div class="qr-url-box">
+                <span class="tel-label">Smartphone Remote URL (LAN):</span>
+                <a id="qr-lan-url" href="/?view=mobile" target="_blank" class="qr-link">http://127.0.0.1:5000/?view=mobile</a>
+            </div>
+            <div class="row compact-row" style="margin-top:14px;">
+                <button type="button" id="qr-preview-mobile-btn" class="primary-btn compact-btn">📱 この画面でスマホUIをプレビュー</button>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='main.js') }}"></script>

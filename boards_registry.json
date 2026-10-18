@@ -1,0 +1,151 @@
+{
+  "families": [
+    {
+      "id": "esp32",
+      "name": "Espressif ESP32 Series",
+      "vendor": "Espressif",
+      "description": "Wi-Fi/BLE内蔵・RMT/DMAによる高速WS2812B駆動に対応したメインストリームMCU",
+      "boards": [
+        {
+          "id": "esp32s3",
+          "name": "ESP32-S3 (DevKitC-1)",
+          "mcu": "ESP32-S3 (Dual-Core XTensa LX7 @ 240MHz)",
+          "flash_options": ["4MB", "8MB", "16MB"],
+          "default_flash": "4MB",
+          "has_wifi": true,
+          "has_ble": true,
+          "usb_cdc": true,
+          "max_pins": 8,
+          "recommended_pins": [1, 2, 4, 5, 6, 7, 15, 16, 17, 18, 21, 38, 39, 40, 41, 42],
+          "default_pins": [2, 4, 5, 6, 7, 15, 16, 17],
+          "pio_env_map": {
+            "4MB": "esp32s3_4mb",
+            "8MB": "esp32s3_8mb",
+            "16MB": "esp32s3_8mb"
+          }
+        },
+        {
+          "id": "esp32",
+          "name": "ESP32 Standard (WROOM / DevKit)",
+          "mcu": "ESP32 (Dual-Core XTensa LX6 @ 240MHz)",
+          "flash_options": ["4MB", "8MB"],
+          "default_flash": "4MB",
+          "has_wifi": true,
+          "has_ble": true,
+          "usb_cdc": false,
+          "max_pins": 8,
+          "recommended_pins": [2, 4, 5, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33],
+          "default_pins": [2, 4, 5, 16, 17, 18, 19, 21],
+          "pio_env_map": {
+            "4MB": "esp32",
+            "8MB": "esp32"
+          }
+        },
+        {
+          "id": "esp32c3",
+          "name": "ESP32-C3 (SuperMini / DevKitM)",
+          "mcu": "ESP32-C3 (Single-Core RISC-V @ 160MHz)",
+          "flash_options": ["4MB"],
+          "default_flash": "4MB",
+          "has_wifi": true,
+          "has_ble": true,
+          "usb_cdc": true,
+          "max_pins": 4,
+          "recommended_pins": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          "default_pins": [2, 3, 4, 5, 6, 7, 8, 10],
+          "pio_env_map": {
+            "4MB": "esp32c3"
+          }
+        },
+        {
+          "id": "esp32c6",
+          "name": "ESP32-C6 (Wi-Fi 6 / DevKitC-1)",
+          "mcu": "ESP32-C6 (RISC-V @ 160MHz, Wi-Fi 6)",
+          "flash_options": ["4MB", "8MB"],
+          "default_flash": "4MB",
+          "has_wifi": true,
+          "has_ble": true,
+          "usb_cdc": true,
+          "max_pins": 4,
+          "recommended_pins": [0, 1, 2, 3, 4, 5, 6, 7, 8, 15, 18, 19, 20, 21, 22, 23],
+          "default_pins": [2, 3, 4, 5, 6, 7, 18, 19],
+          "pio_env_map": {
+            "4MB": "esp32c6",
+            "8MB": "esp32c6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "teensy",
+      "name": "PJRC Teensy Series (High-Speed DMA)",
+      "vendor": "PJRC",
+      "description": "Cortex-M7 600MHz & USB 2.0 Hi-Speed (480Mbps) による超多灯8ピン並列DMA制御向けMCU",
+      "boards": [
+        {
+          "id": "teensy40",
+          "name": "Teensy 4.0",
+          "mcu": "i.MX RT1062 (ARM Cortex-M7 @ 600MHz)",
+          "flash_options": ["2MB"],
+          "default_flash": "2MB",
+          "has_wifi": false,
+          "has_ble": false,
+          "usb_cdc": true,
+          "max_pins": 8,
+          "recommended_pins": [2, 14, 7, 8, 6, 20, 21, 5, 1, 3, 4, 9, 10, 11, 12],
+          "default_pins": [2, 14, 7, 8, 6, 20, 21, 5],
+          "pio_env_map": {
+            "2MB": "teensy40"
+          }
+        },
+        {
+          "id": "teensy41",
+          "name": "Teensy 4.1 (SD / Ethernet対応)",
+          "mcu": "i.MX RT1062 (ARM Cortex-M7 @ 600MHz, 8MB Flash)",
+          "flash_options": ["8MB"],
+          "default_flash": "8MB",
+          "has_wifi": false,
+          "has_ble": false,
+          "usb_cdc": true,
+          "max_pins": 8,
+          "recommended_pins": [2, 14, 7, 8, 6, 20, 21, 5, 1, 3, 4, 9, 10, 11, 12, 24, 25, 28, 29],
+          "default_pins": [2, 14, 7, 8, 6, 20, 21, 5],
+          "pio_env_map": {
+            "8MB": "teensy41"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spresense",
+      "name": "SONY SPRESENSE Series",
+      "vendor": "SONY",
+      "description": "CXD5602 (6-Core ARM Cortex-M4F + 1.5MB SRAM) 搭載、ハイレゾオーディオ解析×LED制御向けボード",
+      "boards": [
+        {
+          "id": "spresense",
+          "name": "SONY SPRESENSE (Main Board)",
+          "mcu": "SONY CXD5602 (6-Core Cortex-M4F @ 156MHz, 1.5MB SRAM)",
+          "flash_options": ["8MB"],
+          "default_flash": "8MB",
+          "has_wifi": false,
+          "has_ble": false,
+          "usb_cdc": false,
+          "max_pins": 8,
+          "recommended_pins": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 21],
+          "default_pins": [2, 3, 4, 5, 6, 7, 8, 9],
+          "pio_env_map": {
+            "8MB": "spresense"
+          }
+        }
+      ]
+    }
+  ],
+  "led_chips": [
+    { "id": "WS2812B", "name": "WS2812B (Standard 5V)", "voltage": 5, "ma_per_led_max": 45, "idle_ma_per_led": 0.8, "default_order": "GRB" },
+    { "id": "WS2812E", "name": "WS2812E / ECO (5V)", "voltage": 5, "ma_per_led_max": 36, "idle_ma_per_led": 0.6, "default_order": "GRB" },
+    { "id": "WS2813", "name": "WS2813 (Dual-Signal 5V)", "voltage": 5, "ma_per_led_max": 45, "idle_ma_per_led": 1.0, "default_order": "GRB" },
+    { "id": "WS2815", "name": "WS2815 (Dual-Signal 12V)", "voltage": 12, "ma_per_led_max": 15, "idle_ma_per_led": 1.2, "default_order": "GRB" },
+    { "id": "SK6812", "name": "SK6812 RGB (5V)", "voltage": 5, "ma_per_led_max": 42, "idle_ma_per_led": 0.7, "default_order": "GRB" }
+  ]
+}

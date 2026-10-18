@@ -1,0 +1,128 @@
+{
+  "sheets": [
+    {
+      "id": "sheet_36x24_ver1",
+      "code": "SONY-LED-3624-A",
+      "name": "36×24 標準フレキシブルLEDシート (Ver1.0実機検証済)",
+      "usage": "TechHandsOn デモ機 / 汎用動画・テキスト表示用",
+      "led_chip": "WS2812B",
+      "voltage": 5,
+      "color_order": "GRB",
+      "canvas_width": 36,
+      "canvas_height": 24,
+      "total_leds": 864,
+      "physical_size": "360mm × 240mm (10mmピッチ)",
+      "topology": "unified",
+      "zigzag": true,
+      "start_pos": 0,
+      "recommended_brightness": 10,
+      "channels": [
+        { "pin": 2, "width": 36, "height": 24, "zigzag": true, "start_pos": 0, "enabled": true }
+      ]
+    },
+    {
+      "id": "sheet_88x10_audiolink",
+      "code": "SONY-LED-8810-S1",
+      "name": "88×10 長尺リボンLEDマトリックス (Single)",
+      "usage": "AudioLink Draft 標準バナー / 横長電光表示",
+      "led_chip": "WS2812B",
+      "voltage": 5,
+      "color_order": "GRB",
+      "canvas_width": 88,
+      "canvas_height": 10,
+      "total_leds": 880,
+      "physical_size": "880mm × 100mm (10mmピッチ)",
+      "topology": "unified",
+      "zigzag": true,
+      "start_pos": 0,
+      "recommended_brightness": 10,
+      "channels": [
+        { "pin": 2, "width": 88, "height": 10, "zigzag": true, "start_pos": 0, "enabled": true }
+      ]
+    },
+    {
+      "id": "sheet_88x10_dual",
+      "code": "SONY-LED-8810-D2",
+      "name": "88×10 デュアルミラーLEDシート (2系統同時出力)",
+      "usage": "AudioLink 左右対称・2面同期演出",
+      "led_chip": "WS2812B",
+      "voltage": 5,
+      "color_order": "GRB",
+      "canvas_width": 88,
+      "canvas_height": 10,
+      "total_leds": 1760,
+      "physical_size": "880mm × 100mm × 2枚",
+      "topology": "mirror",
+      "zigzag": true,
+      "start_pos": 0,
+      "recommended_brightness": 10,
+      "channels": [
+        { "pin": 2, "width": 88, "height": 10, "zigzag": true, "start_pos": 0, "enabled": true },
+        { "pin": 4, "width": 88, "height": 10, "zigzag": true, "start_pos": 0, "enabled": true }
+      ]
+    },
+    {
+      "id": "sheet_32x8_compact",
+      "code": "STD-WS-3208",
+      "name": "32×8 汎用コンパクトLEDマトリックスシート",
+      "usage": "卓上テスト・小型電光掲示板・プロトタイプ検証用",
+      "led_chip": "WS2812B",
+      "voltage": 5,
+      "color_order": "GRB",
+      "canvas_width": 32,
+      "canvas_height": 8,
+      "total_leds": 256,
+      "physical_size": "320mm × 80mm (10mmピッチ)",
+      "topology": "unified",
+      "zigzag": true,
+      "start_pos": 0,
+      "recommended_brightness": 15,
+      "channels": [
+        { "pin": 2, "width": 32, "height": 8, "zigzag": true, "start_pos": 0, "enabled": true }
+      ]
+    },
+    {
+      "id": "sheet_16x16_tile",
+      "code": "STD-WS-1616",
+      "name": "16×16 正方形ドット絵LEDパネル",
+      "usage": "アイコン表示・ドット絵アート・小型サイン",
+      "led_chip": "WS2812B",
+      "voltage": 5,
+      "color_order": "GRB",
+      "canvas_width": 16,
+      "canvas_height": 16,
+      "total_leds": 256,
+      "physical_size": "160mm × 160mm (10mmピッチ)",
+      "topology": "unified",
+      "zigzag": true,
+      "start_pos": 0,
+      "recommended_brightness": 15,
+      "channels": [
+        { "pin": 2, "width": 16, "height": 16, "zigzag": true, "start_pos": 0, "enabled": true }
+      ]
+    },
+    {
+      "id": "sheet_72x48_quad",
+      "code": "SONY-LED-7248-Q4",
+      "name": "72×48 大型高精細マトリックス (4ピン並列分割駆動)",
+      "usage": "大型展示・高フレームレート映像投影 (4Ch分割)",
+      "led_chip": "WS2812E",
+      "voltage": 5,
+      "color_order": "GRB",
+      "canvas_width": 72,
+      "canvas_height": 48,
+      "total_leds": 3456,
+      "physical_size": "720mm × 480mm (4ゾーン分割)",
+      "topology": "unified",
+      "zigzag": true,
+      "start_pos": 0,
+      "recommended_brightness": 8,
+      "channels": [
+        { "pin": 2, "width": 72, "height": 12, "zigzag": true, "start_pos": 0, "enabled": true },
+        { "pin": 4, "width": 72, "height": 12, "zigzag": true, "start_pos": 0, "enabled": true },
+        { "pin": 5, "width": 72, "height": 12, "zigzag": true, "start_pos": 0, "enabled": true },
+        { "pin": 6, "width": 72, "height": 12, "zigzag": true, "start_pos": 0, "enabled": true }
+      ]
+    }
+  ]
+}
