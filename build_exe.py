@@ -68,7 +68,10 @@ def main():
     print("=== 5. Packaging files for distribution ===")
     dist_package_dir = os.path.join(project_dir, "dist", "ESP32_Hardware_Tester")
     if os.path.exists(dist_package_dir):
-        shutil.rmtree(dist_package_dir)
+        try:
+            shutil.rmtree(dist_package_dir)
+        except Exception as e:
+            print(f"Warning: could not clean {dist_package_dir} ({e}). Overwriting existing files directly.")
     os.makedirs(dist_package_dir, exist_ok=True)
     
     # Copy EXEs
